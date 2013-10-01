@@ -25,17 +25,19 @@ our $VERSION = '$Rev$';
 our $RELEASE = '20 Apr 2009';
 
 my $pluginName = 'MsOfficeAttachmentsAsHTMLPlugin';
-our $afterSaveHandlerSemaphore;
+our $afterUploadHandlerSemaphore;
 
 sub initPlugin {
 
     #my ( $topic, $web, $user, $installWeb ) = @_;
-    undef $afterSaveHandlerSemaphore;
+    undef $afterUploadHandlerSemaphore;
     return 1;
 }
 
-sub afterAttachmentSaveHandler {
-    my ( $attachmentAttr, $topic, $web ) = @_;
+sub afterUploadHandler {
+    my ($attachmentAttr, $meta) = @_;			
+    my $web = $meta->{_web};
+    my $topic = $meta->{_topic};
 
     my $attachmentName = $attachmentAttr->{"attachment"};
     return unless ( $attachmentName =~ s/(.docx?)$//i );
@@ -80,16 +82,16 @@ sub afterAttachmentSaveHandler {
 
     return unless Foswiki::Func::getPreferencesFlag('REPLACE_WITH_ATTACHMENT');
 
-    $afterSaveHandlerSemaphore = $attachmentName;
+    $afterUploadHandlerSemaphore = $attachmentName;
 }
 
 sub afterSaveHandler {
-    return unless $afterSaveHandlerSemaphore;
+    return unless $afterUploadHandlerSemaphore;
 
     my ( $text, $topic, $web, $error, $meta ) = @_;
 
-    my $attachmentName = $afterSaveHandlerSemaphore;
-    undef $afterSaveHandlerSemaphore;
+    my $attachmentName = $afterUploadHandlerSemaphore;
+    undef $afterUploadHandlerSemaphore;
 
     $text =
       Foswiki::Func::getPreferencesValue("\U$pluginName\E_REPLACEMENTNOTE")
